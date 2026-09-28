@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inicio de Sesión y Registro</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Fredoka for rounded headers, Share Tech Mono for labels and inputs -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Share+Tech+Mono&display=swap"
+        rel="stylesheet">
+
+    <style>
+        /* Custom font classes */
+        .font-fredoka {
+            font-family: 'Fredoka', cursive, sans-serif;
+        }
+
+        .font-mono-tech {
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        /* Background grid effect matching the design prompt image */
+        body {
+            background-color: #1a2836;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
+            font-family: 'Fredoka', sans-serif;
+            color: #ffffff;
+            min-height: 100vh;
+        }
+
+        /* Card container styling */
+        .app-card {
+            background-color: #24374a;
+            border: 1px solid #2d445c;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            border-radius: 28px;
+        }
+
+        /* Pill input styling matching image */
+        .cyan-pill-input {
+            background-color: #00c2cb;
+            color: #082930;
+            border-radius: 9999px;
+            font-family: 'Share Tech Mono', monospace;
+            letter-spacing: 0.5px;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .cyan-pill-input::placeholder {
+            color: #0f515e;
+            opacity: 0.9;
+        }
+
+        .cyan-pill-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(0, 194, 203, 0.35);
+            background-color: #00d4de;
+        }
+
+        /* Button gradients */
+        .btn-gradient-blue {
+            background: linear-gradient(180deg, #384c78 0%, #293859 100%);
+            border: 1px solid #486199;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+            transition: all 0.2s ease;
+        }
+
+        .btn-gradient-blue:hover {
+            background: linear-gradient(180deg, #435b8f 0%, #32446d 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-gradient-blue:active {
+            transform: translateY(0);
+        }
+
+        .btn-gradient-teal {
+            background: linear-gradient(180deg, #009cb3 0%, #005a82 100%);
+            border: 1px solid #00c2cb;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+            transition: all 0.2s ease;
+        }
+
+        .btn-gradient-teal:hover {
+            background: linear-gradient(180deg, #00b3cd 0%, #006b99 100%);
+            transform: translateY(-1px);
+        }
+
+        /* Toast notification styling */
+        .toast-notification {
+            transform: translateY(-100%);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+
+        .toast-notification.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* Utility class to hide elements */
+        .oculto {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body class="flex items-center justify-center p-4">
+
+    <!-- Custom Toast Alert (No alert() used) -->
+    <div id="custom-toast"
+        class="toast-notification fixed top-5 z-50 px-6 py-3 rounded-full text-white font-mono-tech text-sm shadow-2xl flex items-center gap-3 border bg-slate-800 border-cyan-500">
+        <span id="toast-icon">ℹ️</span>
+        <span id="toast-message">Mensaje del sistema</span>
+    </div>
+
+    <!-- Main Container Card -->
+    <div class="app-card w-full max-w-md p-8 sm:p-10 my-auto relative overflow-hidden">
+
+        <!-- SECCIÓN DE AUTENTICACIÓN -->
+        <div id="seccion-auth" class="flex flex-col">
+
+            <!-- Back Arrow (Visible only in Register Mode) -->
+            <button id="btn-back-arrow" onclick="alternarModoAuth()"
+                class="oculto text-cyan-400 hover:text-cyan-300 w-fit mb-2 transition-transform hover:-translate-x-1 focus:outline-none"
+                aria-label="Volver">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+            </button>
+
+            <!-- Titles -->
+            <h1 id="titulo-form" class="font-fredoka text-3xl sm:text-4xl font-bold tracking-wide text-white mb-1">
+                Inicio de sesión
+            </h1>
+            <p id="subtitulo-form" class="text-slate-300 text-sm font-fredoka mb-8">
+                Inicia sesión con tu cuenta
+            </p>
+
+            <!-- Form Inputs -->
+            <form onsubmit="event.preventDefault();" class="flex flex-col gap-5">
+
+                <!-- User Name Field (Hidden by default, shown on Register mode) -->
+                <div id="campo-nombre" class="oculto flex flex-col gap-1.5">
+                    <label class="font-mono-tech text-xs font-bold text-slate-300 tracking-wider uppercase">
+                        NOMBRE DE USUARIO
+                    </label>
+                    <input type="text" id="auth-nombre" placeholder="NOMBRE"
+                        class="cyan-pill-input px-5 py-3 w-full font-bold uppercase placeholder-teal-900 text-teal-950">
+                </div>
+
+                <!-- Email Field -->
+                <div class="flex flex-col gap-1.5">
+                    <label class="font-mono-tech text-xs font-bold text-slate-300 tracking-wider uppercase">
+                        CORREO ELECTRONICO
+                    </label>
+                    <input type="email" id="auth-email" placeholder="EJEMPLO@EMAIL.COM"
+                        class="cyan-pill-input px-5 py-3 w-full font-bold uppercase placeholder-teal-900 text-teal-950">
+                </div>
+
+                <!-- Password Field -->
+                <div class="flex flex-col gap-1.5">
+                    <label class="font-mono-tech text-xs font-bold text-slate-300 tracking-wider uppercase">
+                        CONTRASEÑA
+                    </label>
+                    <input type="password" id="auth-password" placeholder="••••••••••••"
+                        class="cyan-pill-input px-5 py-3 w-full font-bold placeholder-teal-900 text-teal-950">
+                </div>
+
+                <!-- Submit Buttons -->
+                <div class="mt-4 flex flex-col items-center">
+                    <button type="button" id="btn-login" onclick="iniciarSesion()"
+                        class="btn-gradient-blue font-mono-tech w-full py-3.5 rounded-full text-white font-bold tracking-widest uppercase text-sm sm:text-base">
+                        INICIAR SESIÓN
+                    </button>
+
+                    <button type="button" id="btn-registro" onclick="registrarUsuario()"
+                        class="btn-gradient-teal font-mono-tech w-full py-3.5 rounded-full text-white font-bold tracking-widest uppercase text-sm sm:text-base oculto">
+                        CREAR CUENTA
+                    </button>
+                </div>
+
+            </form>
+
+            <!-- Bottom Toggle Text -->
+            <div class="mt-8 text-center font-fredoka text-sm text-slate-200">
+                <p id="texto-pregunta" class="font-medium">¿No tienes cuenta?</p>
+                <button type="button" onclick="alternarModoAuth()" id="link-alternar"
+                    class="text-white hover:underline font-bold mt-0.5 focus:outline-none">
+                    Regístrate
+                </button>
+            </div>
+
+        </div>
+
+        <!-- SECCIÓN DE BIENVENIDA (Usuario Logueado) -->
+        <div id="seccion-bienvenida" class="oculto flex flex-col items-center text-center py-6">
+
+            <!-- Profile Avatar Icon -->
+            <div
+                class="w-20 h-20 rounded-full bg-cyan-500/20 border-2 border-cyan-400 flex items-center justify-center text-3xl mb-4 text-cyan-300 shadow-lg">
+                👤
+            </div>
+
+            <!-- Main Welcome Message -->
+            <h2 class="font-fredoka text-3xl sm:text-4xl font-bold text-white mb-2 leading-tight">
+                Hola, <br>
+                <span id="usuario-nombre" class="text-cyan-400">Usuario</span>
+            </h2>
+
+            <p class="font-fredoka text-slate-300 text-sm mb-6 max-w-xs">
+                Has iniciado sesión correctamente en tu cuenta.
+            </p>
+
+
+
+            <!-- Carousel (carrusel de comida según Figma) -->
+            <div class="w-full max-w-sm mx-auto mb-4">
+                <div id="carousel" class="relative overflow-hidden rounded-2xl" style="height:320px">
+                    <div class="carousel-track flex transition-transform duration-500">
+                        <!-- Slide 1: Hamburguesa -->
+                        <div class="carousel-slide flex-none w-full p-3">
+                            <div
+                                class="w-full h-full rounded-xl bg-gradient-to-br from-orange-500 to-amber-700 text-white p-3 flex flex-col">
+                                <img src="https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=800&q=80"
+                                    alt="Hamburguesa" class="w-full h-44 sm:h-40 object-cover rounded-lg" />
+                                <div class="mt-3 px-1">
+                                    <h3 class="font-fredoka text-lg font-bold">Hamburguesa Especial</h3>
+                                    <p class="text-sm text-amber-100/90">Carne jugosa, queso cheddar y salsa BBQ.</p>
+                                </div>
+                                <div class="mt-3 px-1 mt-auto">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="font-mono-tech font-bold text-lg">$6.50</span>
+                                    </div>
+                                    <div class="mt-2">
+                                        <button onclick="addToCart('burger')"
+                                            class="w-full px-3 py-2 bg-white/10 border border-white/30 rounded-md text-sm hover:bg-white/20">Agregar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Slide 2: Sushi -->
+                        <div class="carousel-slide flex-none w-full p-3">
+                            <div
+                                class="w-full h-full rounded-xl bg-gradient-to-br from-rose-500 to-pink-700 text-white p-3 flex flex-col">
+                                <img src="https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80"
+                                    alt="Sushi" class="w-full h-44 sm:h-40 object-cover rounded-lg" />
+                                <div class="mt-3 px-1">
+                                    <h3 class="font-fredoka text-lg font-bold">Sushi Mix</h3>
+                                    <p class="text-sm text-pink-100/90">Selección fresca del día.</p>
+                                </div>
+                                <div class="mt-3 px-1 mt-auto">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="font-mono-tech font-bold text-lg">$9.00</span>
+                                    </div>
+                                    <div class="mt-2">
+                                        <button onclick="addToCart('sushi')"
+                                            class="w-full px-3 py-2 bg-white/10 border border-white/30 rounded-md text-sm hover:bg-white/20">Agregar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Slide 3: Ensalada -->
+                        <div class="carousel-slide flex-none w-full p-3">
+                            <div
+                                class="w-full h-full rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white p-3 flex flex-col">
+                                <img src="https://images.unsplash.com/photo-1552332386-f8dd00dc2f85?auto=format&fit=crop&w=800&q=80"
+                                    alt="Ensalada" class="w-full h-44 sm:h-40 object-cover rounded-lg" />
+                                <div class="mt-3 px-1">
+                                    <h3 class="font-fredoka text-lg font-bold">Ensalada Detox</h3>
+                                    <p class="text-sm text-emerald-100/90">Verdes frescos y aderezo cítrico.</p>
+                                </div>
+                                <div class="mt-3 px-1 mt-auto">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="font-mono-tech font-bold text-lg">$5.25</span>
+                                    </div>
+                                    <div class="mt-2">
+                                        <button onclick="addToCart('salad')"
+                                            class="w-full px-3 py-2 bg-white/10 border border-white/30 rounded-md text-sm hover:bg-white/20">Agregar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Slide 4: Pizza (nueva) -->
+                        <div class="carousel-slide flex-none w-full p-3">
+                            <div
+                                class="w-full h-full rounded-xl bg-gradient-to-br from-yellow-500 to-orange-600 text-white p-3 flex flex-col">
+                                <img src="https://images.unsplash.com/photo-1548365328-9d5a7b2a6c1b?auto=format&fit=crop&w=800&q=80"
+                                    alt="Pizza" class="w-full h-44 sm:h-40 object-cover rounded-lg" />
+                                <div class="mt-3 px-1">
+                                    <h3 class="font-fredoka text-lg font-bold">Pizza Pepperoni</h3>
+                                    <p class="text-sm text-yellow-100/90">Corteza crujiente y pepperoni artesanal.</p>
+                                </div>
+                                <div class="mt-3 px-1 mt-auto">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="font-mono-tech font-bold text-lg">$8.75</span>
+                                    </div>
+                                    <div class="mt-2">
+                                        <button onclick="addToCart('pizza')"
+                                            class="w-full px-3 py-2 bg-white/10 border border-white/30 rounded-md text-sm hover:bg-white/20">Agregar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Slide 5: Tacos (nueva) -->
+                        <div class="carousel-slide flex-none w-full p-3">
+                            <div
+                                class="w-full h-full rounded-xl bg-gradient-to-br from-red-500 to-rose-600 text-white p-3 flex flex-col">
+                                <img src="https://images.unsplash.com/photo-1600891964599-f61ba0e24092?auto=format&fit=crop&w=800&q=80"
+                                    alt="Tacos" class="w-full h-44 sm:h-40 object-cover rounded-lg" />
+                                <div class="mt-3 px-1">
+                                    <h3 class="font-fredoka text-lg font-bold">Tacos al Pastor</h3>
+                                    <p class="text-sm text-rose-100/90">Sabor tradicional con piña y cilantro.</p>
+                                </div>
+                                <div class="mt-3 px-1 mt-auto">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="font-mono-tech font-bold text-lg">$4.50</span>
+                                    </div>
+                                    <div class="mt-2">
+                                        <button onclick="addToCart('tacos')"
+                                            class="w-full px-3 py-2 bg-white/10 border border-white/30 rounded-md text-sm hover:bg-white/20">Agregar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Controls -->
+                    <button id="prevBtn" aria-label="Anterior"
+                        class="absolute left-3 top-1/2 -translate-y-1/2 bg-black/30 text-white rounded-full p-2 hover:scale-105">‹</button>
+                    <button id="nextBtn" aria-label="Siguiente"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 bg-black/30 text-white rounded-full p-2 hover:scale-105">›</button>
+
+                    <!-- Dots -->
+                    <div id="carousel-dots" class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2"></div>
+                </div>
+            </div>
+
+            <!-- Cart Summary (funciones internas, solo frontend) -->
+            <div id="cart-summary" class="w-full max-w-sm mx-auto mb-4 bg-slate-800/40 p-3 rounded-xl oculto">
+                <h4 class="font-fredoka text-white font-bold mb-2">Carrito</h4>
+                <div id="cart-items" class="flex flex-col gap-2 mb-3"></div>
+                <div class="flex justify-between text-slate-200 font-mono-tech">
+                    <span>Subtotal:</span>
+                    <span id="cart-subtotal">$0.00</span>
+                </div>
+                <div class="flex justify-between text-slate-200 font-mono-tech">
+                    <span>Impuesto (10%):</span>
+                    <span id="cart-tax">$0.00</span>
+                </div>
+                <div class="flex justify-between text-white font-bold mt-2">
+                    <span>Total:</span>
+                    <span id="cart-total">$0.00</span>
+                </div>
+                <div class="mt-3 flex flex-col gap-2">
+                    <button id="pay-btn" onclick="pagar()"
+                        class="btn-gradient-teal text-white font-bold py-2 rounded-md">Pagar</button>
+                    <div id="mini-ticket" class="bg-slate-900/60 p-3 rounded-md text-sm text-slate-100 oculto">
+                        <!-- Mini ticket content injected here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Logout Button -->
+            <button type="button" onclick="cerrarSesion()"
+                class="btn-gradient-blue font-mono-tech w-full py-3.5 rounded-full text-white font-bold tracking-widest uppercase text-sm">
+                CERRAR SESIÓN
+            </button>
+
+        </div>
+
+    </div>
+
+    <!-- SCRIPT CON FIREBASE -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import {
+            getAuth,
+            signInWithEmailAndPassword,
+            createUserWithEmailAndPassword,
+            updateProfile,
+            signOut,
+            onAuthStateChanged
+        } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDo4cjEPWoFfvcZXGH7MNGdFzIr6tI2BHM",
+            authDomain: "appmoviles-37d98.firebaseapp.com",
+            projectId: "appmoviles-37d98",
+            storageBucket: "appmoviles-37d98.firebasestorage.app",
+            messagingSenderId: "816880482161",
+            appId: "1:816880482161:web:0d2dd8fd21709369ae28d0"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        // Al cargar la página, forzar la vista de login: cerrar sesión si existe y mostrar el formulario
+        window.addEventListener('load', async () => {
+            try {
+                if (auth && typeof signOut === 'function') {
+                    await signOut(auth).catch(() => { });
+                }
+            } catch (e) {
+                // ignore errors
+            }
+            const authSection = document.getElementById('seccion-auth');
+            const welcomeSection = document.getElementById('seccion-bienvenida');
+            if (authSection) authSection.classList.remove('oculto');
+            if (welcomeSection) welcomeSection.classList.add('oculto');
+        });
+
+        // State variables
+        let esModoRegistro = false;
+
+        // Custom Toast Messenger
+        function mostrarNotificacion(mensaje, tipo = 'info') {
+            const toast = document.getElementById("custom-toast");
+            const toastMsg = document.getElementById("toast-message");
+            const toastIcon = document.getElementById("toast-icon");
+
+            toastMsg.textContent = mensaje;
+
+            if (tipo === 'error') {
+                toastIcon.textContent = '⚠️';
+                toast.className = "toast-notification fixed top-5 z-50 px-6 py-3 rounded-full text-white font-mono-tech text-sm shadow-2xl flex items-center gap-3 border bg-slate-900 border-red-500 show";
+            } else if (tipo === 'exito') {
+                toastIcon.textContent = '✅';
+                toast.className = "toast-notification fixed top-5 z-50 px-6 py-3 rounded-full text-white font-mono-tech text-sm shadow-2xl flex items-center gap-3 border bg-slate-900 border-teal-400 show";
+            } else {
+                toastIcon.textContent = 'ℹ️';
+                toast.className = "toast-notification fixed top-5 z-50 px-6 py-3 rounded-full text-white font-mono-tech text-sm shadow-2xl flex items-center gap-3 border bg-slate-900 border-cyan-400 show";
+            }
+
+            setTimeout(() => {
+                toast.classList.remove("show");
+            }, 3500);
+        }
+
+        // Firebase Auth State Observer
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // User is signed in
+                document.getElementById("seccion-auth").classList.add("oculto");
+                document.getElementById("seccion-bienvenida").classList.remove("oculto");
+
+                // Set name or email
+                const nombreMostrar = user.displayName || user.email.split('@')[0];
+                document.getElementById("usuario-nombre").textContent = nombreMostrar;
+            } else {
+                // User is signed out
+                document.getElementById("seccion-auth").classList.remove("oculto");
+                document.getElementById("seccion-bienvenida").classList.add("oculto");
+            }
+        });
+
+        // Toggle Auth View (Login <-> Register)
+        window.alternarModoAuth = () => {
+            esModoRegistro = !esModoRegistro;
+
+            const campoNombre = document.getElementById("campo-nombre");
+            const btnLogin = document.getElementById("btn-login");
+            const btnRegistro = document.getElementById("btn-registro");
+            const btnBackArrow = document.getElementById("btn-back-arrow");
+            const tituloForm = document.getElementById("titulo-form");
+            const subtituloForm = document.getElementById("subtitulo-form");
+            const textoPregunta = document.getElementById("texto-pregunta");
+            const linkAlternar = document.getElementById("link-alternar");
+
+            if (esModoRegistro) {
+                // Switch to Register Mode
+                campoNombre.classList.remove("oculto");
+                btnLogin.classList.add("oculto");
+                btnRegistro.classList.remove("oculto");
+                btnBackArrow.classList.remove("oculto");
+
+                tituloForm.textContent = "Registro";
+                subtituloForm.textContent = "Crea una cuenta usando tu correo electrónico";
+                textoPregunta.textContent = "¿Ya tienes cuenta?";
+                linkAlternar.textContent = "Inicia sesión";
+            } else {
+                // Switch to Login Mode
+                campoNombre.classList.add("oculto");
+                btnLogin.classList.remove("oculto");
+                btnRegistro.classList.add("oculto");
+                btnBackArrow.classList.add("oculto");
+
+                tituloForm.textContent = "Inicio de sesión";
+                subtituloForm.textContent = "Inicia sesión con tu cuenta";
+                textoPregunta.textContent = "¿No tienes cuenta?";
+                linkAlternar.textContent = "Regístrate";
+            }
+        };
+
+        // Login Handler
+        window.iniciarSesion = async () => {
+            const email = document.getElementById("auth-email").value.trim();
+            const pass = document.getElementById("auth-password").value;
+
+            if (!email || !pass) {
+                mostrarNotificacion("Por favor llena todos los campos.", "error");
+                return;
+            }
+
+            try {
+                await signInWithEmailAndPassword(auth, email, pass);
+                mostrarNotificacion("¡Sesión iniciada con éxito!", "exito");
+            } catch (error) {
+                console.error("Error al iniciar sesión:", error);
+                let msg = "Error al iniciar sesión";
+                if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+                    msg = "Correo o contraseña incorrectos.";
+                } else if (error.code === 'auth/invalid-email') {
+                    msg = "El formato de correo no es válido.";
+                }
+                mostrarNotificacion(msg, "error");
+            }
+        };
+
+        // Register Handler
+        window.registrarUsuario = async () => {
+            const nombre = document.getElementById("auth-nombre").value.trim();
+            const email = document.getElementById("auth-email").value.trim();
+            const pass = document.getElementById("auth-password").value;
+
+            if (!nombre || !email || !pass) {
+                mostrarNotificacion("Por favor llena todos los campos.", "error");
+                return;
+            }
+
+            if (pass.length < 6) {
+                mostrarNotificacion("La contraseña debe tener al menos 6 caracteres.", "error");
+                return;
+            }
+
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+                // Set Display Name in Firebase Auth Profile
+                await updateProfile(userCredential.user, { displayName: nombre });
+                mostrarNotificacion("¡Cuenta creada exitosamente!", "exito");
+            } catch (error) {
+                console.error("Error al registrar cuenta:", error);
+                let msg = "Error al registrar la cuenta";
+                if (error.code === 'auth/email-already-in-use') {
+                    msg = "El correo electrónico ya está registrado.";
+                } else if (error.code === 'auth/invalid-email') {
+                    msg = "El correo ingresado no es válido.";
+                }
+                mostrarNotificacion(msg, "error");
+            }
+        };
+
+        // Sign Out Handler
+        window.cerrarSesion = async () => {
+            try {
+                await signOut(auth);
+                mostrarNotificacion("Has cerrado sesión.", "info");
+            } catch (error) {
+                console.error("Error al cerrar sesión:", error);
+                mostrarNotificacion("Error al cerrar sesión.", "error");
+            }
+        };
+
+        // Simple Carousel Logic
+        (function () {
+            const track = document.querySelector('.carousel-track');
+            const slides = Array.from(document.querySelectorAll('.carousel-slide'));
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const dotsContainer = document.getElementById('carousel-dots');
+            let currentIndex = 0;
+            let slideWidth = 0;
+            let autoPlayInterval = null;
+
+            function setup() {
+                slideWidth = slides[0].getBoundingClientRect().width;
+                slides.forEach((slide, index) => {
+                    slide.style.width = '100%';
+                });
+
+                // create dots
+                slides.forEach((_, i) => {
+                    const dot = document.createElement('button');
+                    dot.className = 'w-2 h-2 rounded-full bg-white/60';
+                    dot.style.opacity = i === 0 ? '1' : '0.45';
+                    dot.setAttribute('data-index', i);
+                    dot.addEventListener('click', () => goToSlide(i));
+                    dotsContainer.appendChild(dot);
+                });
+
+                prevBtn.addEventListener('click', prevSlide);
+                nextBtn.addEventListener('click', nextSlide);
+
+                startAutoPlay();
+                window.addEventListener('resize', () => {
+                    slideWidth = slides[0].getBoundingClientRect().width;
+                    goToSlide(currentIndex, false);
+                });
+            }
+
+            function updateDots() {
+                const dots = Array.from(dotsContainer.children);
+                dots.forEach((d, i) => d.style.opacity = i === currentIndex ? '1' : '0.45');
+            }
+
+            function goToSlide(index, animate = true) {
+                if (index < 0) index = slides.length - 1;
+                if (index >= slides.length) index = 0;
+                currentIndex = index;
+                if (!animate) track.style.transition = 'none';
+                else track.style.transition = '';
+                track.style.transform = `translateX(-${index * 100}%)`;
+                updateDots();
+            }
+
+            function prevSlide() {
+                goToSlide(currentIndex - 1);
+                restartAutoPlay();
+            }
+
+            function nextSlide() {
+                goToSlide(currentIndex + 1);
+                restartAutoPlay();
+            }
+
+            function startAutoPlay() {
+                stopAutoPlay();
+                autoPlayInterval = setInterval(() => {
+                    goToSlide(currentIndex + 1);
+                }, 4500);
+            }
+
+            function stopAutoPlay() {
+                if (autoPlayInterval) clearInterval(autoPlayInterval);
+                autoPlayInterval = null;
+            }
+
+            function restartAutoPlay() {
+                stopAutoPlay();
+                startAutoPlay();
+            }
+
+            // init
+            document.addEventListener('DOMContentLoaded', setup);
+        })();
+
+        // Carrito (funciones solo por ahora)
+        (function () {
+            const catalog = {
+                burger: { id: 'burger', name: 'Hamburguesa Especial', price: 6.5, img: 'https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=200&q=80' },
+                sushi: { id: 'sushi', name: 'Sushi Mix', price: 9.0, img: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=200&q=80' },
+                salad: { id: 'salad', name: 'Ensalada Detox', price: 5.25, img: 'https://images.unsplash.com/photo-1552332386-f8dd00dc2f85?auto=format&fit=crop&w=200&q=80' },
+                pizza: { id: 'pizza', name: 'Pizza Pepperoni', price: 8.75, img: 'https://images.unsplash.com/photo-1548365328-9d5a7b2a6c1b?auto=format&fit=crop&w=200&q=80' },
+                tacos: { id: 'tacos', name: 'Tacos al Pastor', price: 4.5, img: 'https://images.unsplash.com/photo-1600891964599-f61ba0e24092?auto=format&fit=crop&w=200&q=80' }
+            };
+
+            const cart = {};
+
+            window.addToCart = function (itemId) {
+                if (!catalog[itemId]) return;
+                if (!cart[itemId]) cart[itemId] = { ...catalog[itemId], qty: 0 };
+                cart[itemId].qty += 1;
+                renderCart();
+            };
+
+            window.removeFromCart = function (itemId) {
+                if (!cart[itemId]) return;
+                cart[itemId].qty = Math.max(0, cart[itemId].qty - 1);
+                if (cart[itemId].qty === 0) delete cart[itemId];
+                renderCart();
+            };
+
+            function calculateTotals() {
+                let subtotal = 0;
+                Object.values(cart).forEach(it => subtotal += it.price * it.qty);
+                const tax = +(subtotal * 0.10).toFixed(2);
+                const total = +(subtotal + tax).toFixed(2);
+                return { subtotal: subtotal.toFixed(2), tax: tax.toFixed(2), total: total.toFixed(2) };
+            }
+
+            function renderCart() {
+                const container = document.getElementById('cart-items');
+                const summary = document.getElementById('cart-summary');
+                const subtotalEl = document.getElementById('cart-subtotal');
+                const taxEl = document.getElementById('cart-tax');
+                const totalEl = document.getElementById('cart-total');
+
+                container.innerHTML = '';
+                const items = Object.values(cart);
+                if (items.length === 0) {
+                    summary.classList.add('oculto');
+                    return;
+                }
+
+                summary.classList.remove('oculto');
+
+                items.forEach(it => {
+                    const el = document.createElement('div');
+                    el.className = 'flex items-center justify-between text-sm text-slate-100';
+                    el.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <img src="${catalog[it.id].img}" alt="" class="w-10 h-10 rounded-md object-cover" />
+                            <div>${it.name} x${it.qty}</div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="removeFromCart('${it.id}')" class="px-2 py-1 bg-white/10 rounded">-</button>
+                            <span class="font-mono-tech">$${(it.price * it.qty).toFixed(2)}</span>
+                        </div>`;
+                    container.appendChild(el);
+                });
+
+                const totals = calculateTotals();
+                subtotalEl.textContent = `$${totals.subtotal}`;
+                taxEl.textContent = `$${totals.tax}`;
+                totalEl.textContent = `$${totals.total}`;
+            }
+
+            // image thumbnails are taken from catalog.img
+
+            // Pagar: genera mini-ticket con los items actuales
+            window.pagar = function () {
+                const items = Object.values(cart);
+                const ticketEl = document.getElementById('mini-ticket');
+                if (!items || items.length === 0) {
+                    mostrarNotificacion('El carrito está vacío.', 'error');
+                    return;
+                }
+
+                const totals = calculateTotals();
+                let html = '<div class="font-mono-tech">';
+                html += `<div class="font-bold text-white mb-2">Mini Ticket</div>`;
+                html += '<div class="mb-2">';
+                items.forEach(it => {
+                    html += `<div class="flex justify-between"><div>${it.name} x${it.qty}</div><div>$${(it.price * it.qty).toFixed(2)}</div></div>`;
+                });
+                html += '</div>';
+                html += `<div class="flex justify-between text-slate-200"><div>Subtotal</div><div>$${totals.subtotal}</div></div>`;
+                html += `<div class="flex justify-between text-slate-200"><div>Impuesto (10%)</div><div>$${totals.tax}</div></div>`;
+                html += `<div class="flex justify-between text-white font-bold mt-2"><div>Total</div><div>$${totals.total}</div></div>`;
+                html += `<div class="mt-3 text-xs text-slate-300">Gracias por su compra</div>`;
+                html += '</div>';
+
+                ticketEl.innerHTML = html;
+                ticketEl.classList.remove('oculto');
+                mostrarNotificacion('Pago simulado: mini-ticket generado.', 'exito');
+            };
+
+            // Forzar mostrar Login: cierra sesión localmente y muestra la vista de login
+            window.forceShowLogin = function () {
+                // Try to sign out via firebase if available
+                try {
+                    if (auth && typeof signOut === 'function') {
+                        signOut(auth).catch(() => { });
+                    }
+                } catch (e) {
+                    // ignore
+                }
+                document.getElementById('seccion-auth').classList.remove('oculto');
+                document.getElementById('seccion-bienvenida').classList.add('oculto');
+            };
+
+        })();
+    </script>
+</body>
+
+</html>
